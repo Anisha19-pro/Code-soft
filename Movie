@@ -1,0 +1,40 @@
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import linear_kernel
+
+# Sample movie dataset
+movies = [
+    {"title": "The Shawshank Redemption", "genre": "Drama", "director": "Frank Darabont"},
+    {"title": "The Godfather", "genre": "Crime, Drama", "director": "Francis Ford Coppola"},
+    {"title": "The Dark Knight", "genre": "Action, Crime, Thriller", "director": "Christopher Nolan"},
+    {"title": "12 Angry Men", "genre": "Drama", "director": "Sidney Lumet"},
+    {"title": "Schindler's List", "genre": "Biography, Drama, History", "director": "Steven Spielberg"},
+    {"title": "The Lord of the Rings: The Return of the King", "genre": "Adventure, Drama, Fantasy", "director": "Peter Jackson"},
+]
+
+# Create a DataFrame
+df = pd.DataFrame(movies)
+
+# Combine genre and director into a single feature
+df['features'] = df['genre'] + ' ' + df['director']
+
+# Create a TF-IDF vectorizer
+vectorizer = TfidfVectorizer()
+
+# Fit and transform the features
+tfidf_matrix = vectorizer.fit_transform(df['features'])
+
+# Compute the cosine similarity matrix
+cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix)
+
+# Function to get recommendations
+def get_recommendations(title, cosine_sim=cosine_sim):
+    idx = df[df['title'] == title].index[0]
+    sim_scores = list(enumerate(cosine_sim[idx]))
+    sim_scores.sort(key=lambda x: x[1], reverse=True)
+    sim_scores = sim_scores[1:6]  # Get top 5 recommendations
+    movie_indices = [i[0] for i in sim_scores]
+    return df['title'].iloc[movie_indices]
+
+# Test the recommendation system
+print(get_recommendations("The Shawshank Redemption"))
